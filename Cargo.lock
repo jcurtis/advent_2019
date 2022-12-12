@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "advent_2022"
+name = "advent_2029"
 version = "0.1.0"
 dependencies = [
  "aoc-runner",

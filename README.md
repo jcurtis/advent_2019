@@ -1,4 +1,4 @@
-[![Advent of Code in Rust](https://github.com/jcurtis/advent_2022/actions/workflows/rust.yml/badge.svg)](https://github.com/jcurtis/advent_2022/actions/workflows/rust.yml)
+[![Advent of Code in Rust](https://github.com/jcurtis/advent_2019/actions/workflows/rust.yml/badge.svg)](https://github.com/jcurtis/advent_2019/actions/workflows/rust.yml)
 
 # advent_rust
 
