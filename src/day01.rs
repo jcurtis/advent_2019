@@ -8,7 +8,7 @@ fn solve(input: &str) -> i32 {
 }
 
 fn solve_int(input: i32) -> i32 {
-    (input as i32 / 3) - 2
+    (input / 3) - 2
 }
 
 fn solve_rec(fuel: i32) -> i32 {

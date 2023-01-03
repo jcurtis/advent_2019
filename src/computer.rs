@@ -1,8 +1,10 @@
+use std::ops::ControlFlow;
+
 pub type Memory = Vec<u32>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Computer {
-    pub ins_pointer: usize,
+    pub pointer: usize,
     pub memory: Memory,
 }
 
@@ -12,16 +14,8 @@ impl Computer {
     }
 
     pub fn new_with(memory: Vec<u32>) -> Self {
-        Self {
-            ins_pointer: 0,
-            memory,
-        }
+        Self { pointer: 0, memory }
     }
-
-    // pub fn from(input: &str) -> Self {
-    //     let memory = input.split(',').map(|num| num.parse().unwrap()).collect();
-    //     Self::new_with(memory)
-    // }
 
     pub fn len(&self) -> usize {
         self.memory.len()
@@ -31,30 +25,80 @@ impl Computer {
         self.len() == 0
     }
 
-    pub fn run_command(&mut self) -> Option<u32> {
-        let command = self.memory[self.ins_pointer];
+    pub fn run_command(&mut self) -> ControlFlow<Result<String, String>, u32> {
+        let command = self.memory[self.pointer];
+        println!("Running command at {} = {command}", self.pointer);
         match command {
-            1 => Some(self.add()),
-            2 => Some(self.mul()),
-            99 => None,
-            _ => unreachable!(),
+            1 => match self.add() {
+                Ok(res) => ControlFlow::Continue(res),
+                Err(msg) => ControlFlow::Break(Err(msg)),
+            },
+            2 => match self.mul() {
+                Ok(res) => ControlFlow::Continue(res),
+                Err(msg) => ControlFlow::Break(Err(msg)),
+            },
+            99 => ControlFlow::Break(Ok("exit 99".to_string())),
+            _ => unimplemented!(),
         }
     }
 
-    fn add(&mut self) -> u32 {
-        let a = self.memory[self.ins_pointer + 1];
-        let b = self.memory[self.ins_pointer + 2];
-        let to = self.ins_pointer + 3 as usize;
-        self.memory[to] = a + b;
-        self.memory[to]
+    pub fn run_program(&mut self, parameters: Option<(u32, u32)>) -> Result<u32, String> {
+        if let Some((noun, verb)) = parameters {
+            self.memory[1] = noun;
+            self.memory[2] = verb;
+        }
+        const MAX_ITER: u32 = 100;
+        let err_msg = format!("Hit max iterations {MAX_ITER}");
+        let mut i = 0;
+        loop {
+            i += 1;
+            if i > MAX_ITER {
+                return Err(err_msg);
+            }
+
+            if let ControlFlow::Break(res) = self.run_command() {
+                if let Err(msg) = res {
+                    println!("Program error: {msg}");
+                    return Err(msg);
+                }
+                break;
+            }
+        }
+        Ok(self.memory[0])
     }
 
-    fn mul(&mut self) -> u32 {
-        let a = self.memory[self.ins_pointer + 1];
-        let b = self.memory[self.ins_pointer + 2];
-        let to = self.ins_pointer + 3 as usize;
-        self.memory[to] = a * b;
-        self.memory[to]
+    fn add(&mut self) -> Result<u32, String> {
+        let a = self.memory[self.pointer + 1] as usize;
+        let b = self.memory[self.pointer + 2] as usize;
+        let to = self.memory[self.pointer + 3] as usize;
+
+        let mem_size = self.memory.len();
+        if a >= mem_size || b >= mem_size || to >= mem_size {
+            let err_msg =
+                format!("Index out of bounds, memory size={mem_size}, a={a}, b={b}, to={to}.");
+            return Err(err_msg);
+        }
+
+        self.memory[to] = self.memory[a] + self.memory[b];
+        self.pointer += 4;
+        Ok(self.memory[to])
+    }
+
+    fn mul(&mut self) -> Result<u32, String> {
+        let a = self.memory[self.pointer + 1] as usize;
+        let b = self.memory[self.pointer + 2] as usize;
+        let to = self.memory[self.pointer + 3] as usize;
+
+        let mem_size = self.memory.len();
+        if a >= mem_size || b >= mem_size || to >= mem_size {
+            let err_msg =
+                format!("Index out of bounds, memory size={mem_size}, a={a}, b={b}, to={to}.");
+            return Err(err_msg);
+        }
+
+        self.memory[to] = self.memory[a] * self.memory[b];
+        self.pointer += 4;
+        Ok(self.memory[to])
     }
 }
 

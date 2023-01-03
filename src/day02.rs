@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::computer::Computer;
 
 #[aoc_generator(day02)]
@@ -14,7 +16,6 @@ fn part_1(input: &Computer) -> u32 {
 }
 
 fn solve(input: &Computer) -> u32 {
-    // let input = input.to_owned();
     let mut input = input.memory.to_owned();
     let mut i = 0;
     while i < input.len() {
@@ -48,16 +49,51 @@ fn solve(input: &Computer) -> u32 {
 
 #[aoc(day02, part1, Computer)]
 fn part_1_computer(computer: &Computer) -> u32 {
-    // let computer: &mut Computer = computer;
-    // let res = computer.run_command();
-    dbg!(res);
-    todo!();
+    if let Ok(res) = solve_computer(computer, Some((12, 2))) {
+        res
+    } else {
+        unreachable!()
+    }
 }
 
-// #[aoc(day02, part2)]
-// fn part_2(_input: &str) -> u32 {
-//     todo!();
-// }
+fn solve_computer(computer: &Computer, parameters: Option<(u32, u32)>) -> Result<u32, String> {
+    let mut computer = computer.clone();
+    computer.run_program(parameters)
+}
+
+const GOAL: u32 = 19690720;
+#[aoc(day02, part2)]
+fn part_2(computer: &Computer) -> u32 {
+    let mut flip = false;
+    let pair = (0..=99).combinations(2).find(|parameters| {
+        let noun = parameters[0];
+        let verb = parameters[1];
+        if let Ok(res) = solve_computer(computer, Some((noun, verb))) {
+            if res == GOAL {
+                return true;
+            }
+        }
+        if let Ok(res) = solve_computer(computer, Some((verb, noun))) {
+            if res == GOAL {
+                flip = true;
+                return true;
+            }
+        }
+        false
+    });
+
+    if let Some(pair) = pair {
+        let mut noun = pair[0];
+        let mut verb = pair[1];
+        if flip {
+            noun = pair[1];
+            verb = pair[0];
+        }
+        (100 * noun) + verb
+    } else {
+        unreachable!()
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -83,8 +119,26 @@ mod tests {
         assert_eq!(part_1(&input), 30);
     }
 
+    #[test]
+    fn test_solve_computer() {
+        let input = generator(SAMPLE_1);
+        assert_eq!(solve_computer(&input, None), Ok(3500));
+
+        let input = generator(SAMPLE_2);
+        assert_eq!(solve_computer(&input, None), Ok(2));
+
+        let input = generator(SAMPLE_3);
+        assert_eq!(solve_computer(&input, None), Ok(2));
+
+        let input = generator(SAMPLE_4);
+        assert_eq!(solve_computer(&input, None), Ok(30));
+    }
+
     // #[test]
-    // fn test_part_2() {
-    //     assert_eq!(part_2(&input), 0);
-    // }
+    // this example doesn't make sense
+    fn _test_part_2() {
+        let input = generator(SAMPLE_1);
+        assert_eq!(solve_computer(&input, Some((12, 2))), Ok(19690720));
+        assert_eq!(part_2(&input), 1202);
+    }
 }
