@@ -8,14 +8,14 @@ fn generator(input: &str) -> Computer {
 }
 
 #[aoc(day02, part1)]
-fn part_1(input: &Computer) -> u32 {
+fn part_1(input: &Computer) -> i32 {
     let mut memory = input.memory.to_owned();
     memory[1] = 12;
     memory[2] = 2;
     solve(input)
 }
 
-fn solve(input: &Computer) -> u32 {
+fn solve(input: &Computer) -> i32 {
     let mut input = input.memory.to_owned();
     let mut i = 0;
     while i < input.len() {
@@ -48,7 +48,7 @@ fn solve(input: &Computer) -> u32 {
 }
 
 #[aoc(day02, part1, Computer)]
-fn part_1_computer(computer: &Computer) -> u32 {
+fn part_1_computer(computer: &Computer) -> i32 {
     if let Ok(res) = solve_computer(computer, Some((12, 2))) {
         res
     } else {
@@ -56,14 +56,17 @@ fn part_1_computer(computer: &Computer) -> u32 {
     }
 }
 
-fn solve_computer(computer: &Computer, parameters: Option<(u32, u32)>) -> Result<u32, String> {
+fn solve_computer(computer: &Computer, parameters: Option<(i32, i32)>) -> Result<i32, String> {
     let mut computer = computer.clone();
-    computer.run_program(parameters)
+    if let Some(parameters) = parameters {
+        computer.set_parameters(parameters)?;
+    }
+    computer.run_program()
 }
 
-const GOAL: u32 = 19690720;
+const GOAL: i32 = 19690720;
 #[aoc(day02, part2)]
-fn part_2(computer: &Computer) -> u32 {
+fn part_2(computer: &Computer) -> i32 {
     let mut flip = false;
     let pair = (0..=99).combinations(2).find(|parameters| {
         let noun = parameters[0];
